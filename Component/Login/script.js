@@ -5,7 +5,7 @@ function fingerprint() {
     {
         alert("Fill out the Email");
     }
-    else if(password.value.trim() === "") {
+    else if(password.value.trim() === "") { 
         alert("Fill out the password")
     }
     else if(username.value.trim() !== "" || password.value.trim() !== "") {
