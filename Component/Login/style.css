@@ -131,3 +131,72 @@ input:focus {
     transform: translateY(1px);
 }
 
+.floating-buttons {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 9999;
+  }
+  
+  .floating-buttons button {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background-color: #2563eb; /* Blue-600 */
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .floating-buttons button:hover {
+    background-color: #1d4ed8; /* Blue-700 */
+    transform: scale(1.1);
+  }
+.user-panel-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 70px;
+    height: 70px;
+    background-color: rgba(0, 0, 255, 0.8); /* Semi-transparent blue */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.user-panel-button:hover {
+    background-color: rgba(0, 0, 255, 1);
+    transform: scale(1.1);
+}
+
+.user-panel-button::after {
+    content: "User Panel";
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background-color: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.user-panel-button:hover::after {
+    opacity: 1;
+}
+.user-panel-button img {
+    border-radius: 50%;
+}

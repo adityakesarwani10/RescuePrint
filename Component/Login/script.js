@@ -13,3 +13,6 @@ function fingerprint() {
 
     }
 }
+function user_panel() {
+    window.location.href = "../../Panel2/Component/Registration/index.html";
+}
