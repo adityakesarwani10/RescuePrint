@@ -22,8 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
       if (res.ok) {
+        console.log("Registration script loaded successfully.");
         alert(result.message || "Registration successful!");
-        // Redirect to aadhar page after successful registration
+        // Redirect to Aadhar page after success
         window.location.href = "../Aadhar/aadhar.html";
       } else {
         alert(result.message || result.error || "Registration failed.");

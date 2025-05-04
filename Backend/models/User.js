@@ -7,18 +7,25 @@ const medicationSchema = new mongoose.Schema({
 }, { _id: false });
 
 const userSchema = new mongoose.Schema({
-  fingerprintId: { type: String, required: true, unique: true },
-  name: String,
-  age: Number,
-  gender: String,
-  phone: String,
-  email: String,
-  username: String,
-  password: String,
-  bloodGroup: String,
-  medicalProblem: String,
-  allergies: String,
-  medications: [medicationSchema]
+  name: { type: String },
+  age: { type: Number },
+  gender: { type: String },
+  phone: { type: String },
+  email: { type: String },
+  username: { type: String },
+  password: { type: String },
+
+  // Fingerprint details
+  fingerprintId: { type: String, unique: true, sparse: true },
+
+  // Medical details
+  bloodGroup: { type: String },
+  medicalProblem: { type: String },
+  allergies: { type: String },
+  medications: [medicationSchema],
+
+  // Aadhaar details
+  aadhaar: { type: String, unique: true, sparse: true }
 });
 
 export default mongoose.model('User', userSchema);
