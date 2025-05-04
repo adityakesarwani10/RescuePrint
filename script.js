@@ -116,9 +116,9 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
 document.getElementById("loginBtn").addEventListener("click", async () => {
   const users = getRegisteredUsers();
   if (users.length === 0) {
-    alert("No users registered.");
+    alert("No users registered. Please register first.");
     return;
-  }
+  } 
 
   const allowCredentials = users.map(user => ({
     type: "public-key",
