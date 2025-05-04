@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RescuePrint - Fingerprint Auth</title>
+  <title>Fingerprint Registration</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>RescuePrint</h1>
-    <p>Authenticate with your Fingerprint</p>
-    <button onclick="registerFingerprint()">Register Fingerprint</button>
-    <button onclick="loginFingerprint()">Login with Fingerprint</button>
-    <div id="finger-status" class="status-box">Waiting for action...</div>
+    <form class="glassmorphism">
+      <h2>Fingerprint Registration</h2>
+      <button type="button" id="register-fingerprint">Register Fingerprint</button>
+      <p id="publicKeyOutput"></p>
+    </form>
   </div>
-
   <script src="script.js"></script>
 </body>
-</html>
+  </html>
