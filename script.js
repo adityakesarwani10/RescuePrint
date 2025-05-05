@@ -1,75 +1,104 @@
-async function register() {
-  const username = document.getElementById("username").value.trim();
-  if (!username) return alert("Please enter a username.");
+document.addEventListener("DOMContentLoaded", () => {
+  const registerBtn = document.getElementById("registerBtn");
+  const loginBtn = document.getElementById("loginBtn");
+  const nameInput = document.getElementById("name");
+  const messageDiv = document.getElementById("message");
+  const keyDisplay = document.getElementById("keyDisplay");
 
-  const existingKeys = JSON.parse(localStorage.getItem("webauthn_users") || "[]");
-
-  const publicKeyOptions = {
-    challenge: Uint8Array.from("random-challenge-123", c => c.charCodeAt(0)),
-    rp: { name: "RescuePrint" },
-    user: {
-      id: Uint8Array.from(username, c => c.charCodeAt(0)),
-      name: username,
-      displayName: username
-    },
-    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-    authenticatorSelection: { userVerification: "preferred" },
-    timeout: 60000,
-    attestation: "direct"
+  const showMessage = (text, color = "black") => {
+    messageDiv.textContent = text;
+    messageDiv.style.color = color;
   };
 
-  try {
-    const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
+  const bufferToBase64 = (buffer) =>
+    btoa(String.fromCharCode(...new Uint8Array(buffer)));
 
-    const publicKey = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+  const base64ToBuffer = (base64) =>
+    Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
-    const userExists = existingKeys.find(user => user.key === publicKey);
-    if (userExists) {
-      document.getElementById("status").textContent = "User already registered.";
+  const getUserStore = () =>
+    JSON.parse(localStorage.getItem("registeredUsers") || "{}");
+
+  const setUserStore = (store) =>
+    localStorage.setItem("registeredUsers", JSON.stringify(store));
+
+  registerBtn.addEventListener("click", async () => {
+    const name = nameInput.value.trim();
+    if (!name) {
+      showMessage("Please enter a name.", "red");
       return;
     }
 
-    existingKeys.push({ username, key: publicKey });
-    localStorage.setItem("webauthn_users", JSON.stringify(existingKeys));
+    try {
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          rp: { name: "RescuePrint" },
+          user: {
+            id: new TextEncoder().encode(crypto.randomUUID()),
+            name: `${name}@rescueprint`,
+            displayName: name,
+          },
+          pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+          authenticatorSelection: { authenticatorAttachment: "platform" },
+          timeout: 60000,
+          attestation: "direct",
+        },
+      });
 
-    document.getElementById("publicKeyDisplay").textContent = `Public Key (Credential ID): ${publicKey}`;
-    document.getElementById("status").textContent = "Registration successful!";
-  } catch (err) {
-    console.error(err);
-    alert("Registration failed.");
-  }
-}
+      const rawId = credential.rawId;
+      const credentialId = bufferToBase64(rawId);
+      const users = getUserStore();
 
-async function login() {
-  const existingKeys = JSON.parse(localStorage.getItem("webauthn_users") || "[]");
-  if (existingKeys.length === 0) return alert("No registered users.");
+      if (users[credentialId]) {
+        showMessage("This fingerprint is already registered.", "orange");
+        return;
+      }
 
-  const allowedCredentials = existingKeys.map(user => ({
-    type: "public-key",
-    id: Uint8Array.from(atob(user.key), c => c.charCodeAt(0)),
-    transports: ["internal"]
-  }));
+      users[credentialId] = { name, credentialId };
+      setUserStore(users);
 
-  const publicKeyRequestOptions = {
-    challenge: Uint8Array.from("random-login-challenge", c => c.charCodeAt(0)),
-    allowCredentials: allowedCredentials,
-    userVerification: "preferred",
-    timeout: 60000
-  };
-
-  try {
-    const assertion = await navigator.credentials.get({ publicKey: publicKeyRequestOptions });
-
-    const key = btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)));
-    const matched = existingKeys.find(user => user.key === key);
-
-    if (matched) {
-      document.getElementById("status").textContent = `Login successful! Welcome ${matched.username}`;
-    } else {
-      document.getElementById("status").textContent = "Login failed. Unknown fingerprint.";
+      showMessage(`Registered successfully as ${name}`, "green");
+      keyDisplay.textContent = `Public Key (Credential ID): ${credentialId}`;
+    } catch (err) {
+      console.error("Registration failed", err);
+      showMessage("Registration failed.", "red");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Login failed.");
-  }
-}
+  });
+
+  loginBtn.addEventListener("click", async () => {
+    try {
+      const users = getUserStore();
+      const allowCredentials = Object.keys(users).map((credId) => ({
+        type: "public-key",
+        id: base64ToBuffer(credId),
+      }));
+
+      if (allowCredentials.length === 0) {
+        showMessage("No users registered yet.", "red");
+        return;
+      }
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          allowCredentials,
+          timeout: 60000,
+        },
+      });
+
+      const credentialId = bufferToBase64(assertion.rawId);
+      const user = users[credentialId];
+
+      if (user) {
+        showMessage(`Welcome back, ${user.name}`, "green");
+        keyDisplay.textContent = `Logged in as ${user.name} (Credential ID: ${credentialId})`;
+      } else {
+        showMessage("User not recognized.", "red");
+      }
+    } catch (err) {
+      console.error("Login failed", err);
+      showMessage("Login failed.", "red");
+    }
+  });
+});
