@@ -66,8 +66,6 @@ async function loginFingerprint() {
   }
 }
 
-// Additional WebAuthn registration and login code
-
 // Convert buffer to base64 string
 function bufferToBase64(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
