@@ -1,143 +1,75 @@
-const statusBox = document.getElementById("finger-status");
+async function register() {
+  const username = document.getElementById("username").value.trim();
+  if (!username) return alert("Please enter a username.");
 
-function showStatus(message, type = "success") {
-  statusBox.textContent = message;
-  statusBox.className = `status-box ${type}`;
-}
+  const existingKeys = JSON.parse(localStorage.getItem("webauthn_users") || "[]");
 
-function bufferFromString(str) {
-  return Uint8Array.from(str, c => c.charCodeAt(0));
-}
-
-async function registerFingerprint() {
-  const publicKey = {
-    challenge: bufferFromString("register-challenge"),
+  const publicKeyOptions = {
+    challenge: Uint8Array.from("random-challenge-123", c => c.charCodeAt(0)),
     rp: { name: "RescuePrint" },
     user: {
-      id: bufferFromString("user-id"),
-      name: "aditya@example.com",
-      displayName: "Aditya"
+      id: Uint8Array.from(username, c => c.charCodeAt(0)),
+      name: username,
+      displayName: username
     },
     pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-    authenticatorSelection: {
-      authenticatorAttachment: "platform",
-      userVerification: "required"
-    },
+    authenticatorSelection: { userVerification: "preferred" },
     timeout: 60000,
     attestation: "direct"
   };
 
   try {
-    const credential = await navigator.credentials.create({ publicKey });
-    showStatus("✅ Fingerprint scanned and registered successfully!", "success");
-    console.log("Credential:", credential);
-    localStorage.setItem("credentialId", btoa(String.fromCharCode(...new Uint8Array(credential.rawId))));
+    const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
+
+    const publicKey = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+
+    const userExists = existingKeys.find(user => user.key === publicKey);
+    if (userExists) {
+      document.getElementById("status").textContent = "User already registered.";
+      return;
+    }
+
+    existingKeys.push({ username, key: publicKey });
+    localStorage.setItem("webauthn_users", JSON.stringify(existingKeys));
+
+    document.getElementById("publicKeyDisplay").textContent = `Public Key (Credential ID): ${publicKey}`;
+    document.getElementById("status").textContent = "Registration successful!";
   } catch (err) {
     console.error(err);
-    showStatus("❌ Registration failed. Fingerprint not scanned.", "error");
+    alert("Registration failed.");
   }
 }
 
-async function loginFingerprint() {
-  const credentialId = localStorage.getItem("credentialId");
-  if (!credentialId) {
-    showStatus("⚠️ No fingerprint registered. Please register first.", "warning");
-    return;
-  }
+async function login() {
+  const existingKeys = JSON.parse(localStorage.getItem("webauthn_users") || "[]");
+  if (existingKeys.length === 0) return alert("No registered users.");
 
-  const publicKey = {
-    challenge: bufferFromString("login-challenge"),
-    allowCredentials: [{
-      type: "public-key",
-      id: Uint8Array.from(atob(credentialId), c => c.charCodeAt(0)),
-      transports: ["internal"]
-    }],
-    timeout: 60000,
-    userVerification: "required"
-  };
-
-  try {
-    const assertion = await navigator.credentials.get({ publicKey });
-    showStatus("✅ Fingerprint scanned and verified successfully!", "success");
-    console.log("Assertion:", assertion);
-  } catch (err) {
-    console.error(err);
-    showStatus("❌ Authentication failed. Fingerprint not scanned.", "error");
-  }
-}
-
-// Additional WebAuthn registration and login code
-
-// Convert buffer to base64 string
-function bufferToBase64(buffer) {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-}
-
-// Save a fake user object in localStorage (simulate registration)
-function saveUser(credentialId) {
-  let users = JSON.parse(localStorage.getItem("webauthn_users")) || [];
-  users.push({ credentialId });
-  localStorage.setItem("webauthn_users", JSON.stringify(users));
-}
-
-// Get registered users
-function getRegisteredUsers() {
-  return JSON.parse(localStorage.getItem("webauthn_users")) || [];
-}
-
-// Register
-document.getElementById("registerBtn").addEventListener("click", async () => {
-  const publicKey = {
-    challenge: Uint8Array.from(window.crypto.getRandomValues(new Uint8Array(32))),
-    rp: { name: "RescuePrint Demo" },
-    user: {
-      id: Uint8Array.from(String(Date.now()), c => c.charCodeAt(0)),
-      name: "demo_user_" + Date.now(),
-      displayName: "Demo User"
-    },
-    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-    timeout: 60000,
-    attestation: "direct"
-  };
-
-  try {
-    const credential = await navigator.credentials.create({ publicKey });
-    const credentialId = bufferToBase64(credential.rawId);
-    document.getElementById("status").innerText = "✅ Registration successful";
-    document.getElementById("publicKey").value = credentialId;
-    saveUser(credentialId);
-  } catch (err) {
-    document.getElementById("status").innerText = "❌ Registration failed: " + err.message;
-  }
-});
-
-// Login
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const users = getRegisteredUsers();
-  if (users.length === 0) {
-    alert("No users registered. Please register first.");
-    return;
-  } 
-
-  const allowCredentials = users.map(user => ({
+  const allowedCredentials = existingKeys.map(user => ({
     type: "public-key",
-    id: Uint8Array.from(atob(user.credentialId), c => c.charCodeAt(0))
+    id: Uint8Array.from(atob(user.key), c => c.charCodeAt(0)),
+    transports: ["internal"]
   }));
 
-  const publicKey = {
-    challenge: Uint8Array.from(window.crypto.getRandomValues(new Uint8Array(32))),
-    allowCredentials,
-    timeout: 60000,
-    userVerification: "required"
+  const publicKeyRequestOptions = {
+    challenge: Uint8Array.from("random-login-challenge", c => c.charCodeAt(0)),
+    allowCredentials: allowedCredentials,
+    userVerification: "preferred",
+    timeout: 60000
   };
 
   try {
-    const assertion = await navigator.credentials.get({ publicKey });
-    const credentialId = bufferToBase64(assertion.rawId);
-    document.getElementById("status").innerText = "✅ Login successful";
-    document.getElementById("publicKey").value = credentialId;
+    const assertion = await navigator.credentials.get({ publicKey: publicKeyRequestOptions });
+
+    const key = btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)));
+    const matched = existingKeys.find(user => user.key === key);
+
+    if (matched) {
+      document.getElementById("status").textContent = `Login successful! Welcome ${matched.username}`;
+    } else {
+      document.getElementById("status").textContent = "Login failed. Unknown fingerprint.";
+    }
   } catch (err) {
-    document.getElementById("status").innerText = "❌ Login failed: " + err.message;
+    console.error(err);
+    alert("Login failed.");
   }
-});
+}
