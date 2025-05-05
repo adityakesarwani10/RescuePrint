@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WebAuthn Demo</title>
+  <title>RescuePrint Fingerprint Demo</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h2>WebAuthn Demo</h2>
-    
-    <input type="text" id="username" placeholder="Enter username" required />
+    <h1>RescuePrint: Fingerprint Auth Demo</h1>
+
+    <input type="text" id="name" placeholder="Enter your name" />
 
     <div class="buttons">
-      <button onclick="register()">Register</button>
-      <button onclick="login()">Login</button>
+      <button id="registerBtn">Register Fingerprint</button>
+      <button id="loginBtn">Login with Fingerprint</button>
     </div>
 
-    <div id="publicKeyDisplay"></div>
-    <div id="status"></div>
+    <div id="message"></div>
+    <pre id="keyDisplay"></pre>
   </div>
 
   <script src="script.js"></script>
