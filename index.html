@@ -2,26 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RescuePrint Fingerprint Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RescuePrint: Fingerprint Auth Demo</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>RescuePrint: Fingerprint Auth Demo</h1>
-
-    <input type="text" id="name" placeholder="Enter your name" />
-
-    <div class="buttons">
-      <button id="registerBtn">Register Fingerprint</button>
-      <button id="loginBtn">Login with Fingerprint</button>
-    </div>
-
-    
-    <div id="message"></div>
-    <pre id="keyDisplay"></pre>
+    <h1>RescuePrint:<br> Fingerprint Auth Demo</h1>
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button id="register">Register Fingerprint</button>
+    <button id="login">Login with Fingerprint</button>
+    <p id="publicKeyDisplay"></p>
+    <p id="loginResult"></p>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
